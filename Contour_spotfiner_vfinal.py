@@ -13,6 +13,7 @@ import czifile
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 # Function to calculate and save histograms
 def calculate_and_save_histogram(data, title, x_label, output_filename):
     hist, bins = np.histogram(data, bins=100, range=(0, 15000))
@@ -110,7 +111,13 @@ def process_image(image_path, channel_index, threshold_value, area_threshold, al
             "Average area of small spot contours": np.mean([cv2.contourArea(c) for c in small_spot_contours]),
             "Max area of small spot contours": np.max([cv2.contourArea(c) for c in small_spot_contours]),
             #"Total area of small spot contours": sum([cv2.contourArea(c) for c in single_molecule_contours]),
-            "Average Pixel Value within small spot Contours": average_pixel_value_small_spot
+            "Average Pixel Value within small spot Contours": average_pixel_value_small_spot,
+            "Total Pixels Above Threshold": np.sum(channel_data > threshold_value),
+            "Total Pixels Below Threshold": np.sum(channel_data <= threshold_value),
+            "Average pixel value above threshold": np.mean(channel_data[channel_data > threshold_value]),
+            "Average pixel value below threshold": np.mean(channel_data[channel_data <= threshold_value])
+            
+            
         }
  
         # Calculate and save histograms for pixel brightness
@@ -138,7 +145,7 @@ image_directory = 'yourdirectory'
 # Parameters
 channel_index = #imagechannel
 threshold_value = #yourthresh
-area_threshold = #yourareathreshold
+area_threshold = #yourareathresh
 
 # List image files in the directory
 image_files = [f for f in os.listdir(image_directory) if f.endswith(".czi")]
@@ -164,7 +171,7 @@ contours_data = [
 ] + [
     (data, 'blue', 'Small Spot Contours') for data in all_small_spot_data
 ]
-plot_individual_contours(contours_data, "yourdirectory/individual_contours.png")
+plot_individual_contours(contours_data, "yourdirectory/individual_contours_plot.png")
 
 
 # Create a DataFrame from the results
