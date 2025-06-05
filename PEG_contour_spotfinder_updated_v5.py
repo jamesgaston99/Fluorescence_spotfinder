@@ -12,14 +12,14 @@ import pandas as pd
 from czifile import CziFile
 
 # === USER PARAMETERS ===
-input_folder = '/Users/jamesgaston/Desktop/PhD/Lab work/PEG blocking/PEG_liposome_conditions_reorganised/Lipo_20percPEG/RhodLipo_DPhPC_20percPEG_BDNA_10nM_CompDNA_1nM'
+input_folder = 'your_directory'
 output_excel = os.path.join(input_folder, 'single_channel_analysis_results.xlsx')
 
 # Parameters
-min_intensity = 4000      # minimum intensity threshold for detecting fluorescence
-area_threshold = 50       # area threshold (in pixels) separating single spots vs aggregates
-min_area = 1              # minimum area to consider as a valid contour
-channel_to_analyze = 1    # 0 for channel 1, 1 for channel 2
+min_intensity = #yourthresh     # minimum intensity threshold for detecting fluorescence
+area_threshold = #yourarea      # area threshold (in pixels) separating single spots vs aggregates
+min_area = #yourminarea              # minimum area to consider as a valid contour
+channel_to_analyze = #yourchannel    # 0 for channel 1, 1 for channel 2
 
 # === FUNCTION: SPLIT CHANNELS ===
 def splitchans(filepath, channel_index):
