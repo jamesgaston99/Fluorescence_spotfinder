@@ -21,21 +21,6 @@ area_threshold = #yourarea      # area threshold (in pixels) separating single s
 min_area = #yourminarea              # minimum area to consider as a valid contour
 channel_to_analyze = #yourchannel    # 0 for channel 1, 1 for channel 2
 
-# === FUNCTION: SPLIT CHANNELS ===
-def splitchans(filepath, channel_index):
-    with CziFile(filepath) as czi:
-        img = czi.asarray()
-        shape = img.shape
-
-        if shape[1] <= channel_index:
-            raise ValueError(f"Requested channel index {channel_index} out of range. Image has {shape[1]} channels.")
-
-        channel = np.squeeze(img[0, channel_index, 0, 0, :, :, 0])
-        if channel.ndim != 2:
-            raise ValueError(f"Selected channel not 2D: shape {channel.shape}")
-
-        return channel
-
 # === FUNCTION: FIND AND CLASSIFY CONTOURS ===
 def find_and_classify_contours(img, min_threshold, area_threshold, min_area):
     _, otsu_thresh = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -46,6 +31,9 @@ def find_and_classify_contours(img, min_threshold, area_threshold, min_area):
 
     single_spots = []
     aggregates = []
+    single_area_total = 0
+    aggregate_area_total = 0
+    
     single_mask = np.zeros_like(img, dtype=np.uint8)
     aggregate_mask = np.zeros_like(img, dtype=np.uint8)
 
@@ -54,12 +42,14 @@ def find_and_classify_contours(img, min_threshold, area_threshold, min_area):
         if area >= min_area:
             if area <= area_threshold:
                 single_spots.append(cnt)
+                single_area_total += area
                 cv2.drawContours(single_mask, [cnt], -1, 255, -1)
             else:
                 aggregates.append(cnt)
+                aggregate_area_total += area
                 cv2.drawContours(aggregate_mask, [cnt], -1, 255, -1)
 
-    return single_spots, aggregates, single_mask, aggregate_mask
+    return single_spots, aggregates, single_area_total, aggregate_area_total, single_mask, aggregate_mask
 
 # === MAIN LOOP ===
 results = []
@@ -74,9 +64,8 @@ for filename in os.listdir(input_folder):
             channel_norm = cv2.normalize(channel, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
             # Classify contours
-            single_spots, aggregates, single_mask, aggregate_mask = find_and_classify_contours(
-                channel, min_intensity, area_threshold, min_area
-            )
+            single_spots, aggregates, single_area, aggregate_area, single_mask, aggregate_mask = \
+                find_and_classify_contours(channel, min_intensity, area_threshold, min_area)
 
             # Create output image
             output_img = cv2.cvtColor(channel_norm, cv2.COLOR_GRAY2BGR)
@@ -90,8 +79,10 @@ for filename in os.listdir(input_folder):
             results.append({
                 'Filename': filename,
                 'Channel_Analyzed': channel_to_analyze + 1,
-                'Single_Spots': len(single_spots),
-                'Aggregates': len(aggregates)
+                'Single_Spots_Count': len(single_spots),
+                'Single_Spots_TotalArea': round(single_area, 2),
+                'Aggregates_Count': len(aggregates),
+                'Aggregates_TotalArea': round(aggregate_area, 2)
             })
 
         except Exception as e:
